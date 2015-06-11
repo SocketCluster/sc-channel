@@ -1,5 +1,5 @@
 {
-  "name": "scchannel",
+  "name": "sc-channel",
   "version": "1.0.0",
   "description": "Channel object for SocketCluster",
   "main": "index.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/SocketCluster/scchannel.git"
+    "url": "https://github.com/SocketCluster/sc-channel.git"
   },
   "dependencies": {
     "sc-emitter": "1.0.x"
@@ -20,7 +20,7 @@
   "author": "Jonathan Gros-Dubois",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/SocketCluster/scchannel/issues"
+    "url": "https://github.com/SocketCluster/sc-channel/issues"
   },
-  "homepage": "https://github.com/SocketCluster/scchannel"
+  "homepage": "https://github.com/SocketCluster/sc-channel"
 }
