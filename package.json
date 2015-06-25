@@ -1,6 +1,6 @@
 {
   "name": "sc-channel",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Channel object for SocketCluster",
   "main": "index.js",
   "repository": {
