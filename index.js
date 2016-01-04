@@ -1,21 +1,20 @@
 var SCEmitter = require('sc-emitter').SCEmitter;
 
-if (!Object.create) {
-  Object.create = require('./objectcreate');
-}
-
-var SCChannel = function (name, client) {
+var SCChannel = function (name, client, options) {
   var self = this;
-  
+
   SCEmitter.call(this);
-  
+
   this.PENDING = 'pending';
   this.SUBSCRIBED = 'subscribed';
   this.UNSUBSCRIBED = 'unsubscribed';
-  
+
   this.name = name;
   this.state = this.UNSUBSCRIBED;
   this.client = client;
+
+  this.options = options || {};
+  this.waitForAuth = this.options.waitForAuth || false;
 };
 
 SCChannel.prototype = Object.create(SCEmitter.prototype);
