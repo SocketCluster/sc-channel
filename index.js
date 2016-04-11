@@ -14,17 +14,27 @@ var SCChannel = function (name, client, options) {
   this.client = client;
 
   this.options = options || {};
-  this.waitForAuth = this.options.waitForAuth || false;
+  this.setOptions(this.options);
 };
 
 SCChannel.prototype = Object.create(SCEmitter.prototype);
+
+SCChannel.prototype.setOptions = function (options) {
+  if (!options) {
+    options = {};
+  }
+  this.waitForAuth = options.waitForAuth || false;
+  if (options.data !== undefined) {
+    this.data = options.data;
+  }
+};
 
 SCChannel.prototype.getState = function () {
   return this.state;
 };
 
-SCChannel.prototype.subscribe = function () {
-  this.client.subscribe(this.name);
+SCChannel.prototype.subscribe = function (options) {
+  this.client.subscribe(this.name, options);
 };
 
 SCChannel.prototype.unsubscribe = function () {
