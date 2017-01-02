@@ -8,7 +8,7 @@
     "url": "https://github.com/SocketCluster/sc-channel.git"
   },
   "dependencies": {
-    "sc-emitter": "1.0.x"
+    "sc-emitter": "1.x.x"
   },
   "keywords": [
     "channel",
