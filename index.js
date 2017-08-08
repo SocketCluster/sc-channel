@@ -1,9 +1,9 @@
-var SCEmitter = require('sc-emitter').SCEmitter;
+var Emitter = require('component-emitter');
 
 var SCChannel = function (name, client, options) {
   var self = this;
 
-  SCEmitter.call(this);
+  Emitter.call(this);
 
   this.PENDING = 'pending';
   this.SUBSCRIBED = 'subscribed';
@@ -17,7 +17,7 @@ var SCChannel = function (name, client, options) {
   this.setOptions(this.options);
 };
 
-SCChannel.prototype = Object.create(SCEmitter.prototype);
+SCChannel.prototype = Object.create(Emitter.prototype);
 
 SCChannel.prototype.setOptions = function (options) {
   if (!options) {
