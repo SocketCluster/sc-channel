@@ -24,6 +24,8 @@ SCChannel.prototype.setOptions = function (options) {
     options = {};
   }
   this.waitForAuth = options.waitForAuth || false;
+  this.batch = options.batch || false;
+
   if (options.data !== undefined) {
     this.data = options.data;
   }
