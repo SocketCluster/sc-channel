@@ -1,70 +1,74 @@
-var Emitter = require('component-emitter');
+const AsyncIterableStream = require('async-iterable-stream');
 
-var SCChannel = function (name, client, options) {
-  var self = this;
+class SCChannel extends AsyncIterableStream {
+  constructor(name, client, eventDemux, dataStream) {
+    super();
+    this.PENDING = SCChannel.PENDING;
+    this.SUBSCRIBED = SCChannel.SUBSCRIBED;
+    this.UNSUBSCRIBED = SCChannel.UNSUBSCRIBED;
 
-  Emitter.call(this);
+    this.name = name;
+    this.client = client;
 
-  this.PENDING = 'pending';
-  this.SUBSCRIBED = 'subscribed';
-  this.UNSUBSCRIBED = 'unsubscribed';
-
-  this.name = name;
-  this.state = this.UNSUBSCRIBED;
-  this.client = client;
-
-  this.options = options || {};
-  this.setOptions(this.options);
-};
-
-SCChannel.prototype = Object.create(Emitter.prototype);
-
-SCChannel.prototype.setOptions = function (options) {
-  if (!options) {
-    options = {};
+    this._eventDemux = eventDemux;
+    this._dataStream = dataStream;
   }
-  this.waitForAuth = options.waitForAuth || false;
-  this.batch = options.batch || false;
 
-  if (options.data !== undefined) {
-    this.data = options.data;
+  createAsyncIterator(timeout) {
+    return this._dataStream.createAsyncIterator(timeout);
   }
-};
 
-SCChannel.prototype.getState = function () {
-  return this.state;
-};
+  listener(eventName) {
+    return this._eventDemux.stream(`${this.name}/${eventName}`);
+  }
 
-SCChannel.prototype.subscribe = function (options) {
-  this.client.subscribe(this.name, options);
-};
+  closeListener(eventName) {
+    this._eventDemux.close(`${this.name}/${eventName}`);
+  }
 
-SCChannel.prototype.unsubscribe = function () {
-  this.client.unsubscribe(this.name);
-};
+  closeAllListeners() {
+    this._eventDemux.closeAll();
+  }
 
-SCChannel.prototype.isSubscribed = function (includePending) {
-  return this.client.isSubscribed(this.name, includePending);
-};
+  close() {
+    this.client.closeChannel(this.name);
+  }
 
-SCChannel.prototype.publish = function (data, callback) {
-  this.client.publish(this.name, data, callback);
-};
+  get state() {
+    return this.client.getChannelState(this.name);
+  }
 
-SCChannel.prototype.watch = function (handler) {
-  this.client.watch(this.name, handler);
-};
+  set state(value) {
+    throw new Error('Cannot directly set channel state');
+  }
 
-SCChannel.prototype.unwatch = function (handler) {
-  this.client.unwatch(this.name, handler);
-};
+  get options() {
+    return this.client.getChannelOptions(this.name);
+  }
 
-SCChannel.prototype.watchers = function () {
-  return this.client.watchers(this.name);
-};
+  set options(value) {
+    throw new Error('Cannot directly set channel options');
+  }
 
-SCChannel.prototype.destroy = function () {
-  this.client.destroyChannel(this.name);
-};
+  subscribe(options) {
+    this.client.subscribe(this.name, options);
+  }
 
-module.exports.SCChannel = SCChannel;
+  unsubscribe() {
+    this.client.unsubscribe(this.name);
+  }
+
+  isSubscribed(includePending) {
+    return this.client.isSubscribed(this.name, includePending);
+  }
+
+  publish(data) {
+    return this.client.publish(this.name, data);
+  }
+}
+
+SCChannel.PENDING = 'pending';
+SCChannel.SUBSCRIBED = 'subscribed';
+SCChannel.UNSUBSCRIBED = 'unsubscribed';
+
+module.exports = SCChannel;
