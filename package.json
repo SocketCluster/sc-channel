@@ -8,7 +8,7 @@
     "url": "https://github.com/SocketCluster/sc-channel.git"
   },
   "dependencies": {
-    "iterable-async-stream": "^1.0.0"
+    "async-iterable-stream": "^1.2.0"
   },
   "keywords": [
     "channel",

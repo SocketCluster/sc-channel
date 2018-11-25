@@ -1,77 +1,88 @@
-var IterableAsyncStream = require('iterable-async-stream');
+const AsyncIterableStream = require('async-iterable-stream');
 
-var SCChannel = function (name, client, options) {
-  IterableAsyncStream.call(this);
+class SCChannel {
+  constructor(name, client, eventStream, dataStream) {
+    this.PENDING = 'pending';
+    this.SUBSCRIBED = 'subscribed';
+    this.UNSUBSCRIBED = 'unsubscribed';
 
-  this.PENDING = 'pending';
-  this.SUBSCRIBED = 'subscribed';
-  this.UNSUBSCRIBED = 'unsubscribed';
+    this.name = name;
+    this.client = client;
 
-  this.name = name;
-  this.state = this.UNSUBSCRIBED;
-  this.client = client;
-
-  this.listeners = {};
-  this.options = options || {};
-  this.setOptions(this.options);
-};
-
-SCChannel.prototype = Object.create(IterableAsyncStream.prototype);
-
-SCChannel.prototype.setOptions = function (options) {
-  if (!options) {
-    options = {};
+    this._eventStream = eventStream;
+    this._dataStream = dataStream;
   }
-  this.waitForAuth = options.waitForAuth || false;
-  this.batch = options.batch || false;
 
-  if (options.data !== undefined) {
-    this.data = options.data;
+  async *createEventStream(stream, eventName) {
+    for await (let packet of stream) {
+      if (packet.event === eventName) {
+        if (packet.end) {
+          return;
+        }
+        yield packet.data;
+      }
+    }
   }
-};
 
-SCChannel.prototype.listener = function (eventName) {
-  var currentListener = this.listeners[eventName];
-  if (!currentListener) {
-    currentListener = new IterableAsyncStream();
-    this.listeners[eventName] = currentListener;
+  listener(eventName) {
+    return new AsyncIterableStream(() => {
+      return this.createEventStream(this._eventStream, eventName);
+    });
   }
-  return currentListener;
-};
 
-SCChannel.prototype.destroyListener = function (eventName) {
-  delete this.listeners[eventName];
-};
-
-SCChannel.prototype.emit = function (event, data) {
-  var listener = this.listeners[event];
-  if (listener) {
-    listener.write(data);
+  endListener(eventName) {
+    this._eventStream.write({
+      event: eventName,
+      end: true
+    });
   }
-};
 
-SCChannel.prototype.getState = function () {
-  return this.state;
-};
+  emit(eventName, data) {
+    var listener = this.listeners[eventName];
+    if (listener) {
+      listener.write(data);
+    }
+  }
 
-SCChannel.prototype.subscribe = function (options) {
-  this.client.subscribe(this.name, options);
-};
+  get state() {
+    return this.client.getChannelState(this.name);
+  }
 
-SCChannel.prototype.unsubscribe = function () {
-  this.client.unsubscribe(this.name);
-};
+  set state(value) {
+    throw new Error('Cannot directly set channel state');
+  }
 
-SCChannel.prototype.isSubscribed = function (includePending) {
-  return this.client.isSubscribed(this.name, includePending);
-};
+  get options() {
+    return this.client.getChannelOptions(this.name);
+  }
 
-SCChannel.prototype.publish = function (data, callback) {
-  this.client.publish(this.name, data, callback);
-};
+  set options(value) {
+    throw new Error('Cannot directly set channel options');
+  }
 
-SCChannel.prototype.destroy = function () {
-  this.client.destroyChannel(this.name);
-};
+  subscribe(options) {
+    this.client.subscribe(this.name, options);
+  }
+
+  unsubscribe() {
+    this.client.unsubscribe(this.name);
+  }
+
+  isSubscribed(includePending) {
+    return this.client.isSubscribed(this.name, includePending);
+  }
+
+  publish(data, callback) {
+    this.client.publish(this.name, data, callback);
+  }
+
+  async once() {
+    return this._dataStream.once();
+  }
+
+  [Symbol.asyncIterator]() {
+    return this._dataStream;
+  }
+}
 
 module.exports.SCChannel = SCChannel;
