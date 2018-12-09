@@ -1,7 +1,7 @@
 const AsyncIterableStream = require('async-iterable-stream');
 
-class SCChannel {
-  constructor(name, client, eventStream, dataStream) {
+class SCChannel extends AsyncIterableStream {
+  constructor(name, client, eventDemux, dataStream) {
     this.PENDING = 'pending';
     this.SUBSCRIBED = 'subscribed';
     this.UNSUBSCRIBED = 'unsubscribed';
@@ -9,39 +9,20 @@ class SCChannel {
     this.name = name;
     this.client = client;
 
-    this._eventStream = eventStream;
+    this._eventDemux = eventDemux;
     this._dataStream = dataStream;
   }
 
-  async *createEventStream(stream, eventName) {
-    for await (let packet of stream) {
-      if (packet.event === eventName) {
-        if (packet.end) {
-          return;
-        }
-        yield packet.data;
-      }
-    }
+  createAsyncIterator(timeout) {
+    return this._dataStream.createAsyncIterator(timeout);
   }
 
   listener(eventName) {
-    return new AsyncIterableStream(() => {
-      return this.createEventStream(this._eventStream, eventName);
-    });
+    return this._eventDemux.stream(`${this.name}/${eventName}`);
   }
 
-  endListener(eventName) {
-    this._eventStream.write({
-      event: eventName,
-      end: true
-    });
-  }
-
-  emit(eventName, data) {
-    var listener = this.listeners[eventName];
-    if (listener) {
-      listener.write(data);
-    }
+  closeListener(eventName) {
+    this._eventDemux.close(`${this.name}/${eventName}`);
   }
 
   get state() {
@@ -74,14 +55,6 @@ class SCChannel {
 
   publish(data, callback) {
     this.client.publish(this.name, data, callback);
-  }
-
-  async once() {
-    return this._dataStream.once();
-  }
-
-  [Symbol.asyncIterator]() {
-    return this._dataStream;
   }
 }
 
