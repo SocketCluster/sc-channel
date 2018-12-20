@@ -54,8 +54,8 @@ class SCChannel extends AsyncIterableStream {
     return this.client.isSubscribed(this.name, includePending);
   }
 
-  publish(data, callback) {
-    this.client.publish(this.name, data, callback);
+  publish(data) {
+    return this.client.publish(this.name, data);
   }
 }
 
