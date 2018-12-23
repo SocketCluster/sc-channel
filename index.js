@@ -26,7 +26,7 @@ class SCChannel extends AsyncIterableStream {
     this._eventDemux.close(`${this.name}/${eventName}`);
   }
 
-  closeAllListeners = function () {
+  closeAllListeners() {
     this._eventDemux.closeAll();
   }
 
