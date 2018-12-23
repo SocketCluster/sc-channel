@@ -67,4 +67,4 @@ SCChannel.PENDING = 'pending';
 SCChannel.SUBSCRIBED = 'subscribed';
 SCChannel.UNSUBSCRIBED = 'unsubscribed';
 
-module.exports.SCChannel = SCChannel;
+module.exports = SCChannel;
